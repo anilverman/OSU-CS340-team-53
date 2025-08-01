@@ -1,3 +1,6 @@
+-- Team 53: Library Management System DDL
+-- Anil Verman & Alexander Lott
+
 SET FOREIGN_KEY_CHECKS = 0;
 START TRANSACTION;
 
