@@ -17,29 +17,23 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
---
--- Database: `cs340_vermanan`
---
-CREATE DATABASE IF NOT EXISTS `cs340_vermanan` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `cs340_vermanan`;
-
 -- --------------------------------------------------------
 
 --
--- Table structure for table `authors`
+-- Table structure for table `Authors`
 --
 
-DROP TABLE IF EXISTS `authors`;
-CREATE TABLE `authors` (
+DROP TABLE IF EXISTS `Authors`;
+CREATE TABLE `Authors` (
   `authorID` int(11) NOT NULL,
   `name` varchar(145) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `authors`
+-- Dumping data for table `Authors`
 --
 
-INSERT INTO `authors` (`authorID`, `name`) VALUES
+INSERT INTO `Authors` (`authorID`, `name`) VALUES
 (1, 'George Orwell'),
 (2, 'Andrew Hunt'),
 (3, 'J.R.R. Tolkien');
@@ -47,11 +41,11 @@ INSERT INTO `authors` (`authorID`, `name`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `books`
+-- Table structure for table `Books`
 --
 
-DROP TABLE IF EXISTS `books`;
-CREATE TABLE `books` (
+DROP TABLE IF EXISTS `Books`;
+CREATE TABLE `Books` (
   `bookID` int(11) NOT NULL,
   `title` varchar(145) NOT NULL,
   `authorID` int(11) NOT NULL,
@@ -60,10 +54,10 @@ CREATE TABLE `books` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `books`
+-- Dumping data for table `Books`
 --
 
-INSERT INTO `books` (`bookID`, `title`, `authorID`, `year`, `isbn`) VALUES
+INSERT INTO `Books` (`bookID`, `title`, `authorID`, `year`, `isbn`) VALUES
 (1, '1984', 1, 1949, '9780451524935'),
 (2, 'The Pragmatic Programmer', 2, 1999, '9780201616224'),
 (3, 'The Hobbit', 3, 1937, '9780547928227');
@@ -71,20 +65,20 @@ INSERT INTO `books` (`bookID`, `title`, `authorID`, `year`, `isbn`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `books_has_genres`
+-- Table structure for table `Books_has_Genres`
 --
 
-DROP TABLE IF EXISTS `books_has_genres`;
-CREATE TABLE `books_has_genres` (
+DROP TABLE IF EXISTS `Books_has_Genres`;
+CREATE TABLE `Books_has_Genres` (
   `bookID` int(11) NOT NULL,
   `genreID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `books_has_genres`
+-- Dumping data for table `Books_has_Genres`
 --
 
-INSERT INTO `books_has_genres` (`bookID`, `genreID`) VALUES
+INSERT INTO `Books_has_Genres` (`bookID`, `genreID`) VALUES
 (1, 1),
 (2, 2),
 (3, 3);
@@ -92,11 +86,11 @@ INSERT INTO `books_has_genres` (`bookID`, `genreID`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `checkouts`
+-- Table structure for table `Checkouts`
 --
 
-DROP TABLE IF EXISTS `checkouts`;
-CREATE TABLE `checkouts` (
+DROP TABLE IF EXISTS `Checkouts`;
+CREATE TABLE `Checkouts` (
   `checkoutID` int(11) NOT NULL,
   `memberID` int(11) NOT NULL,
   `bookID` int(11) NOT NULL,
@@ -106,10 +100,10 @@ CREATE TABLE `checkouts` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `checkouts`
+-- Dumping data for table `Checkouts`
 --
 
-INSERT INTO `checkouts` (`checkoutID`, `memberID`, `bookID`, `dueDate`, `isReturned`, `checkoutDate`) VALUES
+INSERT INTO `Checkouts` (`checkoutID`, `memberID`, `bookID`, `dueDate`, `isReturned`, `checkoutDate`) VALUES
 (1, 1, 1, '2025-08-01', 0, '2025-07-15'),
 (2, 2, 2, '2025-08-05', 1, '2025-07-10'),
 (3, 3, 3, '2025-08-10', 0, '2025-07-20');
@@ -117,20 +111,20 @@ INSERT INTO `checkouts` (`checkoutID`, `memberID`, `bookID`, `dueDate`, `isRetur
 -- --------------------------------------------------------
 
 --
--- Table structure for table `genres`
+-- Table structure for table `Genres`
 --
 
-DROP TABLE IF EXISTS `genres`;
-CREATE TABLE `genres` (
+DROP TABLE IF EXISTS `Genres`;
+CREATE TABLE `Genres` (
   `genreID` int(11) NOT NULL,
   `description` varchar(145) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `genres`
+-- Dumping data for table `Genres`
 --
 
-INSERT INTO `genres` (`genreID`, `description`) VALUES
+INSERT INTO `Genres` (`genreID`, `description`) VALUES
 (1, 'Dystopian'),
 (2, 'Software Development'),
 (3, 'Fantasy');
@@ -138,11 +132,11 @@ INSERT INTO `genres` (`genreID`, `description`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `members`
+-- Table structure for table `Members`
 --
 
-DROP TABLE IF EXISTS `members`;
-CREATE TABLE `members` (
+DROP TABLE IF EXISTS `Members`;
+CREATE TABLE `Members` (
   `memberID` int(11) NOT NULL,
   `name` varchar(145) NOT NULL,
   `email` varchar(145) NOT NULL,
@@ -150,10 +144,10 @@ CREATE TABLE `members` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `members`
+-- Dumping data for table `Members`
 --
 
-INSERT INTO `members` (`memberID`, `name`, `email`, `phone`) VALUES
+INSERT INTO `Members` (`memberID`, `name`, `email`, `phone`) VALUES
 (1, 'Alice Smith', 'alice@example.com', '123-456-7890'),
 (2, 'Bob Johnson', 'bob@example.com', '987-654-3210'),
 (3, 'Carol Davis', 'carol@example.com', '555-123-4567');
@@ -161,11 +155,11 @@ INSERT INTO `members` (`memberID`, `name`, `email`, `phone`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `reviews`
+-- Table structure for table `Reviews`
 --
 
-DROP TABLE IF EXISTS `reviews`;
-CREATE TABLE `reviews` (
+DROP TABLE IF EXISTS `Reviews`;
+CREATE TABLE `Reviews` (
   `reviewID` int(11) NOT NULL,
   `rating` smallint(1) NOT NULL,
   `memberID` int(11) NOT NULL,
@@ -173,10 +167,10 @@ CREATE TABLE `reviews` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `reviews`
+-- Dumping data for table `Reviews`
 --
 
-INSERT INTO `reviews` (`reviewID`, `rating`, `memberID`, `bookID`) VALUES
+INSERT INTO `Reviews` (`reviewID`, `rating`, `memberID`, `bookID`) VALUES
 (1, 5, 1, 1),
 (2, 4, 2, 2),
 (3, 5, 3, 3);
@@ -186,50 +180,50 @@ INSERT INTO `reviews` (`reviewID`, `rating`, `memberID`, `bookID`) VALUES
 --
 
 --
--- Indexes for table `authors`
+-- Indexes for table `Authors`
 --
-ALTER TABLE `authors`
+ALTER TABLE `Authors`
   ADD PRIMARY KEY (`authorID`);
 
 --
--- Indexes for table `books`
+-- Indexes for table `Books`
 --
-ALTER TABLE `books`
+ALTER TABLE `Books`
   ADD PRIMARY KEY (`bookID`,`authorID`),
   ADD KEY `fk_books_authors1_idx` (`authorID`);
 
 --
--- Indexes for table `books_has_genres`
+-- Indexes for table `Books_has_Genres`
 --
-ALTER TABLE `books_has_genres`
+ALTER TABLE `Books_has_Genres`
   ADD PRIMARY KEY (`bookID`,`genreID`),
   ADD KEY `fk_books_has_genres_genres1_idx` (`genreID`),
   ADD KEY `fk_books_has_genres_books1_idx` (`bookID`);
 
 --
--- Indexes for table `checkouts`
+-- Indexes for table `Checkouts`
 --
-ALTER TABLE `checkouts`
+ALTER TABLE `Checkouts`
   ADD PRIMARY KEY (`checkoutID`),
   ADD KEY `fk_checkout_members1_idx` (`memberID`),
   ADD KEY `fk_checkout_books1_idx` (`bookID`);
 
 --
--- Indexes for table `genres`
+-- Indexes for table `Genres`
 --
-ALTER TABLE `genres`
+ALTER TABLE `Genres`
   ADD PRIMARY KEY (`genreID`);
 
 --
--- Indexes for table `members`
+-- Indexes for table `Members`
 --
-ALTER TABLE `members`
+ALTER TABLE `Members`
   ADD PRIMARY KEY (`memberID`);
 
 --
--- Indexes for table `reviews`
+-- Indexes for table `Reviews`
 --
-ALTER TABLE `reviews`
+ALTER TABLE `Reviews`
   ADD PRIMARY KEY (`reviewID`),
   ADD KEY `fk_reviews_members1_idx` (`memberID`),
   ADD KEY `fk_reviews_books1_idx` (`bookID`);
@@ -239,39 +233,39 @@ ALTER TABLE `reviews`
 --
 
 --
--- AUTO_INCREMENT for table `authors`
+-- AUTO_INCREMENT for table `Authors`
 --
-ALTER TABLE `authors`
+ALTER TABLE `Authors`
   MODIFY `authorID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `books`
+-- AUTO_INCREMENT for table `Books`
 --
-ALTER TABLE `books`
+ALTER TABLE `Books`
   MODIFY `bookID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `checkouts`
+-- AUTO_INCREMENT for table `Checkouts`
 --
-ALTER TABLE `checkouts`
+ALTER TABLE `Checkouts`
   MODIFY `checkoutID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `genres`
+-- AUTO_INCREMENT for table `Genres`
 --
-ALTER TABLE `genres`
+ALTER TABLE `Genres`
   MODIFY `genreID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT for table `members`
+-- AUTO_INCREMENT for table `Members`
 --
-ALTER TABLE `members`
+ALTER TABLE `Members`
   MODIFY `memberID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
--- AUTO_INCREMENT for table `reviews`
+-- AUTO_INCREMENT for table `Reviews`
 --
-ALTER TABLE `reviews`
+ALTER TABLE `Reviews`
   MODIFY `reviewID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
@@ -279,31 +273,31 @@ ALTER TABLE `reviews`
 --
 
 --
--- Constraints for table `books`
+-- Constraints for table `Books`
 --
-ALTER TABLE `books`
-  ADD CONSTRAINT `fk_books_authors1` FOREIGN KEY (`authorID`) REFERENCES `authors` (`authorID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE `Books`
+  ADD CONSTRAINT `fk_books_authors1` FOREIGN KEY (`authorID`) REFERENCES `Authors` (`authorID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `books_has_genres`
+-- Constraints for table `Books_has_Genres`
 --
-ALTER TABLE `books_has_genres`
-  ADD CONSTRAINT `fk_books_has_genres_books1` FOREIGN KEY (`bookID`) REFERENCES `books` (`bookID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  ADD CONSTRAINT `fk_books_has_genres_genres1` FOREIGN KEY (`genreID`) REFERENCES `genres` (`genreID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE `Books_has_Genres`
+  ADD CONSTRAINT `fk_books_has_genres_books1` FOREIGN KEY (`bookID`) REFERENCES `Books` (`bookID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  ADD CONSTRAINT `fk_books_has_genres_genres1` FOREIGN KEY (`genreID`) REFERENCES `Genres` (`genreID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `checkouts`
+-- Constraints for table `Checkouts`
 --
-ALTER TABLE `checkouts`
-  ADD CONSTRAINT `fk_checkout_books1` FOREIGN KEY (`bookID`) REFERENCES `books` (`bookID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  ADD CONSTRAINT `fk_checkout_members1` FOREIGN KEY (`memberID`) REFERENCES `members` (`memberID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE `Checkouts`
+  ADD CONSTRAINT `fk_checkout_books1` FOREIGN KEY (`bookID`) REFERENCES `Books` (`bookID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  ADD CONSTRAINT `fk_checkout_members1` FOREIGN KEY (`memberID`) REFERENCES `Members` (`memberID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
--- Constraints for table `reviews`
+-- Constraints for table `Reviews`
 --
-ALTER TABLE `reviews`
-  ADD CONSTRAINT `fk_reviews_books1` FOREIGN KEY (`bookID`) REFERENCES `books` (`bookID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  ADD CONSTRAINT `fk_reviews_members1` FOREIGN KEY (`memberID`) REFERENCES `members` (`memberID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE `Reviews`
+  ADD CONSTRAINT `fk_reviews_books1` FOREIGN KEY (`bookID`) REFERENCES `Books` (`bookID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_reviews_members1` FOREIGN KEY (`memberID`) REFERENCES `Members` (`memberID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
