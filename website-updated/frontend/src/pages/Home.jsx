@@ -10,7 +10,7 @@ function Home({ backendURL }) {
             });
 
             const { reset } = await response.json();
-            console.log(reset);
+            console.log('database reset');
             setReset(reset);
         } catch (error) {
             console.log(error);

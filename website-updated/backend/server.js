@@ -37,13 +37,24 @@ app.get('/authors', async (req, res) => {
     
 });
 
+app.post('/delete-book', async (req, res) => {
+    const { bookID } = req.body;
+
+    try {
+        const [result] = await db.query(`CALL beaverton_library_delete_book(?)`, [bookID]);
+        res.status(200).json({ message: `Book successfully deleted.` });
+    } catch (error) {
+        console.error('Error deleting book:', error);
+        res.status(500).json({ message: `Failed to delete book.` });
+    }
+});
+
 app.post('/reset', async (req, res) => {
     try {
         // Create and execute our queries
         const query1 = `CALL beaverton_library_reset_database();`;
         const [reset] = await db.query(query1);
-    
-        res.status(200).json({ message: 'Database has been reset.' });  // Send the results to the frontend
+        res.status(200).send('Database has been reset.');  // Send the results to the frontend
 
     } catch (error) {
         console.error("Error executing queries:", error);
