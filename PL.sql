@@ -76,6 +76,7 @@ BEGIN
         FOREIGN KEY (memberID) REFERENCES Members(memberID)
             ON DELETE NO ACTION ON UPDATE NO ACTION,
         FOREIGN KEY (bookID) REFERENCES Books(bookID)
+            ON DELETE CASCADE ON UPDATE CASCADE
     );
 
     CREATE TABLE Reviews (

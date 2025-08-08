@@ -1,4 +1,4 @@
-const DeleteBookForm = ({ rowObject, backendURL, refreshBook }) => {
+const DeleteBookForm = ({ rowObject, backendURL, refreshBooks }) => {
 
     const handleDelete = async function () {
         try {
@@ -12,7 +12,7 @@ const DeleteBookForm = ({ rowObject, backendURL, refreshBook }) => {
 
             const { message } = await response.json();
             console.log(message);
-            refreshBook(); // Reload book data after deletion
+            refreshBooks(); // Reload book data after deletion
         } catch (error) {
             console.log(error);
         }
