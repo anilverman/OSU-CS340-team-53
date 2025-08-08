@@ -8,8 +8,13 @@ INSERT INTO Members (name, email, phone)
 VALUES (@name, @email, @phone);
 
 -- READ out members in the database
-SELECT * FROM Members
-ORDER BY Members.name ASC;
+SELECT
+  m.memberID AS "Member ID",
+  m.name AS "Name",
+  m.email AS "Email",
+  m.phone AS "Phone Number" 
+FROM Members AS m
+ORDER BY "Name" ASC;
 
 -- UPDATE an existing member
 UPDATE Members 
@@ -30,8 +35,20 @@ INSERT INTO Checkouts (bookID, dueDate, isReturned, checkoutDate)
 VALUES (@bookID, @dueDate, @isReturned, @checkoutDate);
 
 -- READ out checkouts in the database
-SELECT * FROM Checkouts
-ORDER BY Checkouts.dueDate ASC, Checkouts.isReturned ASC;
+SELECT 
+  c.checkoutID AS "Checkout ID",
+  m.name AS "Checked Out By",
+  b.title AS "Book Title",
+  c.checkoutDate AS "Checkout Date",
+  c.dueDate AS "Due Date",
+  CASE
+    WHEN c.isReturned = 1 THEN "Yes"
+    ELSE "No"
+  END AS "Returned?"
+FROM Checkouts AS c
+JOIN Members AS m ON m.memberID = c.memberID
+JOIN Books AS b ON b.bookID = c.bookID
+ORDER BY "Due Date" ASC, "Returned?" ASC;
 
 -- UPDATE an existing checkout
 UPDATE Checkouts 
@@ -54,8 +71,15 @@ INSERT INTO Reviews (rating, memberID, bookID)
 VALUES (@rating, @memberID, @bookID);
 
 -- READ out reviews in the database
-SELECT * FROM Reviews
-ORDER BY r.bookID ASC;
+SELECT
+  r.reviewID AS "Review ID",
+  b.title AS "Book Title",
+  m.name AS "Reviewer",
+  r.rating AS "Rating"
+FROM Reviews AS r
+JOIN Members AS m ON m.memberID = r.memberID
+JOIN Books AS b ON b.bookID = r.bookID
+ORDER BY "Review ID" ASC;
 
 -- UPDATE an existing review
 UPDATE Reviews 
@@ -76,10 +100,28 @@ INSERT INTO Books (title, authorID, year, isbn)
 VALUES (@title, @authorID, @year, @isbn);
 
 -- READ out books in the database
-SELECT * FROM Books
-JOIN Books_has_Genres ON Books.bookID = Books_has_Genres.bookID
-JOIN Genres ON Books_has_Genres.genreID = Genres.genreID
-ORDER BY b.name ASC;
+WITH BGList (bookID, genres) AS (
+	SELECT bg.bookID, GROUP_CONCAT(g.description SEPARATOR ", ")
+    FROM Books_has_Genres AS bg
+    JOIN Genres AS g ON bg.genreID = g.genreID
+    GROUP BY bg.bookID
+)
+SELECT
+  b.bookID AS "Book ID",
+  b.title AS "Title",
+  a.name AS "Author",
+  bgl.genres AS "Genre(s)",
+  b.year AS "Publishing Year",
+  b.isbn AS "ISBN",
+  CASE
+    WHEN c.isReturned = 1 THEN "Yes"
+    ELSE "No"
+  END AS "Checked Out?"
+FROM Books AS b
+JOIN BGList AS bgl ON b.bookID = bgl.bookID
+JOIN Authors AS a ON b.authorID = a.authorID
+JOIN Checkouts AS c ON b.bookID = c.bookID
+ORDER BY "Title" ASC, "Book ID" ASC;
 
 -- UPDATE an existing book
 UPDATE Books 
@@ -88,9 +130,12 @@ SET title = @title,
   year = @year,
   isbn = @isbn
 WHERE bookID = @bookID;
+-- The query below needs to be replaced with something more precise 
+/*
 UPDATE Books_has_Genres 
 SET genreID = @genreID
 WHERE bookID = @bookID;
+*/
 
 -- DELETE a book from the database
 DELETE FROM Books 
@@ -104,9 +149,20 @@ INSERT INTO Authors (name)
 VALUES (@name);
 
 -- READ out authors in the database
-SELECT a.authorID, a.name
-FROM Authors as a
-ORDER BY a.name ASC;
+WITH BookCounts (authorID, numBooks) AS (
+  SELECT a.authorID, COUNT(*)
+  FROM Books AS b 
+  JOIN Authors as a
+  WHERE a.authorID = b.authorID
+  GROUP BY a.authorID
+)
+SELECT 
+  a.authorID AS "Author ID", 
+  a.name AS "Name",
+  bc.numBooks AS "Number of Books"
+FROM Authors AS a
+JOIN BookCounts as bc ON a.authorID = bc.authorID
+ORDER BY "Name" ASC;
 
 -- UPDATE an existing author
 UPDATE Authors 
@@ -125,9 +181,20 @@ INSERT INTO Genres (description)
 VALUES (@desc);
 
 -- READ out genres in the database
-SELECT g.authorID, a.description
-FROM Genres as g
-ORDER BY g.description ASC;
+WITH BookCounts (genreID, numBooks) AS (
+  SELECT g.genreID, COUNT(*)
+  FROM Books_has_Genres AS bg 
+  JOIN Genres as g
+  WHERE g.genreID = bg.genreID
+  GROUP BY g.genreID
+)
+SELECT 
+  g.genreID AS "Genre ID", 
+  g.description AS "Description",
+  bc.numBooks AS "Number of Books"
+FROM Genres AS g
+JOIN BookCounts AS bc ON g.genreID = bc.genreID
+ORDER BY "Description" ASC;
 
 -- UPDATE an existing genre
 UPDATE Genres 
