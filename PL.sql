@@ -1,7 +1,11 @@
 -- Group 53 Procedure Language SQL queries
 
 DROP PROCEDURE IF EXISTS beaverton_library_reset_database;
+DROP PROCEDURE IF EXISTS beaverton_library_add_book;
+DROP PROCEDURE IF EXISTS beaverton_library_update_book;
 DROP PROCEDURE IF EXISTS beaverton_library_delete_book;
+DROP PROCEDURE IF EXISTS beaverton_library_add_author;
+DROP PROCEDURE IF EXISTS beaverton_library_delete_author;
 
 DELIMITER //
 
@@ -133,6 +137,73 @@ BEGIN
     COMMIT;
 END //
 
+-- Procedure for adding a new book to the database
+CREATE PROCEDURE beaverton_library_add_book(IN p_title VARCHAR(145), p_author VARCHAR(145), p_year INT, p_isbn VARCHAR(17), p_genreID INT)
+BEGIN
+    DECLARE p_authorID INT;
+    DECLARE p_bookID INT;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Rollback the transaction in case of any error
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not add ", p_title, " by ", p_author, " to the database.") AS Result;
+    END;
+
+    START TRANSACTION;
+
+    -- Get the book's author's authorID
+    SELECT Authors.authorID INTO p_authorID FROM Authors WHERE Authors.name = p_author;
+    -- Check if the database already has the book we're adding
+    IF EXISTS (SELECT 1 FROM Books WHERE Books.title = p_title AND Books.authorID = p_authorID AND Books.year = p_year AND Books.isbn = p_isbn) THEN
+        -- Rollback if the book we're trying to add already exists
+        ROLLBACK;
+        SELECT CONCAT("Error: The book ", p_title, " by ", p_author, " already exists in the database.") AS Result;
+    ELSE 
+        INSERT INTO Books (title, authorID, year, isbn)
+        VALUES (
+            p_title,
+            p_authorID,
+            p_year,
+            p_isbn
+        );
+        SELECT LAST_INSERT_ID() INTO p_bookID;
+        INSERT INTO Books_has_Genres (bookID, genreID)
+        VALUES (
+            p_bookID, 
+            p_genreID
+        );
+        COMMIT;
+        SELECT CONCAT("Successfully added ", p_title, " by ", p_author, " to the database.") AS Result;
+    END IF;
+END //
+
+-- Procedure for updating the information of a book in the database
+CREATE PROCEDURE beaverton_library_update_book(IN p_bookID INT, p_newAuthorID INT, p_newYear INT, p_newIsbn VARCHAR(17), p_newGenre INT)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Rollback the transaction in case of any error
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not update the information of book #", p_bookID," in the database.") AS Result;
+    END;
+
+    START TRANSACTION;
+
+    UPDATE Books SET 
+        Books.authorID = p_newAuthorID,
+        Books.year = p_newYear,
+        Books.isbn = p_newIsbn
+    WHERE Books.bookID = p_bookID;
+    DELETE FROM Books_has_Genres WHERE Books.bookID = Books_has_Genres.bookID;
+    INSERT INTO Books_has_Genres (bookID, genreID)
+    VALUES (
+        p_bookID,
+        p_newGenre
+    );
+    COMMIT;
+    SELECT CONCAT("Book #", p_bookID, " successfully updated.") AS Result;
+END //
+
 -- Procedure for deleting a book from the database
 CREATE PROCEDURE beaverton_library_delete_book(IN p_bookID INT)
 BEGIN
@@ -140,7 +211,7 @@ BEGIN
     BEGIN
         -- Rollback the transaction in case of any error
         ROLLBACK;
-        SELECT "Error: Could not delete book #" + CAST(p_bookID AS VARCHAR(10)) + " from database." AS Result;
+        SELECT CONCAT("Error: Could not delete book #", p_bookID," from the database.") AS Result;
     END;
 
     START TRANSACTION;
@@ -149,13 +220,61 @@ BEGIN
     IF EXISTS (SELECT 1 FROM Books WHERE Books.bookID = p_bookID) THEN
         -- Delete the book from the Books table
         DELETE FROM Books WHERE Books.bookID = p_bookID;
-
         COMMIT;
-        SELECT "Book #" + CAST(p_bookID AS VARCHAR(10)) + " successfully deleted." AS Result;
+        SELECT CONCAT("Book #", p_bookID, " successfully deleted.") AS Result;
     ELSE
-        -- Rollback the transaction if customer does not exist
+        -- Rollback the transaction if book does not exist
         ROLLBACK;
-        SELECT "Error: Could not delete book #" + CAST(p_bookID AS VARCHAR(10)) + " from database." AS Result;
+        SELECT CONCAT("Error: Could not delete book #", p_bookID," from the database.") AS Result;
+    END IF;
+END //
+
+-- Procedure for adding a new author to the database
+CREATE PROCEDURE beaverton_library_add_author(IN p_name VARCHAR(145))
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Rollback the transaction in case of any error
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not add author", p_name," to the database.") AS Result;
+    END;
+
+    START TRANSACTION;
+
+    -- Check if the database already has the author we're adding
+    IF EXISTS (SELECT 1 FROM Authors WHERE Authors.name = p_name) THEN 
+        -- Rollback if the author we're trying to add already exists
+        ROLLBACK;
+        SELECT CONCAT("Error: The author ", p_name, " already exists in the database.") AS Result;
+    ELSE
+        INSERT INTO Authors (name) VALUES (p_name);
+        COMMIT;
+        SELECT CONCAT("Successfully added author ", p_name, " to the database.") AS Result;
+    END IF;
+END //
+
+-- Procedure for deleting an author from the database
+CREATE PROCEDURE beaverton_library_delete_author(IN p_authorID INT)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Rollback the transaction in case of any error
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not delete author #", p_authorID," from the database.") AS Result;
+    END;
+
+    START TRANSACTION;
+
+    -- Checks if the author to be deleted is actually in the database
+    IF EXISTS (SELECT 1 FROM Authors WHERE Authors.authorID = p_authorID) THEN
+        -- Delete the author from the Authors table
+        DELETE FROM Authors WHERE Authors.authorID = p_authorID;
+        COMMIT;
+        SELECT CONCAT("Author #", p_authorID, " successfully deleted.") AS Result;
+    ELSE
+        -- Rollback the transaction if author does not exist
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not delete author #", p_authorID," from the database.") AS Result;
     END IF;
 END //
 
