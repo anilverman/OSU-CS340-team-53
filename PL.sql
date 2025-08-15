@@ -218,6 +218,8 @@ BEGIN
         value VARCHAR(145)
     );
 
+    -- This part of the procedure separates the contents of the p_newGenres string (using the "|" character as the delimiter)
+    -- and saves the resulting parts as a table for later use. Gemini was used to construct it.
     WHILE v_position > 0 DO
         SET v_position = LOCATE('|', p_newGenres);
         IF v_position > 0 THEN
