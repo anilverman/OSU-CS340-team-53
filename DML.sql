@@ -16,13 +16,6 @@ SELECT
 FROM Members AS m
 ORDER BY "Name" ASC;
 
--- UPDATE an existing member
-UPDATE Members 
-SET name = @name,
-  email = @email,
-  phone = @phone
-WHERE memberID = @memberID;
-
 -- DELETE a member from the database
 DELETE FROM Members 
 WHERE memberID = @memberID;
@@ -50,25 +43,12 @@ JOIN Members AS m ON m.memberID = c.memberID
 JOIN Books AS b ON b.bookID = c.bookID
 ORDER BY "Due Date" ASC, "Returned?" ASC;
 
--- UPDATE an existing checkout
-UPDATE Checkouts 
-SET memberID = @memberID,
-  bookID = @bookID,
-  dueDate = @dueDate,
-  isReturned = @isReturned,
-  checkoutDate = @checkoutDate
-WHERE checkoutID = @checkoutID;
-
 -- DELETE a checkout from the database
 DELETE FROM Checkouts 
 WHERE checkoutID = @checkoutID;
 
 
 -- CRUD queries for the Reviews table:
-
--- CREATE a new review
-INSERT INTO Reviews (rating, memberID, bookID)
-VALUES (@rating, @memberID, @bookID);
 
 -- READ out reviews in the database
 SELECT
@@ -81,13 +61,6 @@ JOIN Members AS m ON m.memberID = r.memberID
 JOIN Books AS b ON b.bookID = r.bookID
 ORDER BY "Review ID" ASC;
 
--- UPDATE an existing review
-UPDATE Reviews 
-SET rating = @rating,
-  memberID = @memberID,
-  bookID = @bookID
-WHERE authorID = @authorID;
-
 -- DELETE a review from the database
 DELETE FROM Reviews 
 WHERE reviewID = @reviewID;
@@ -96,8 +69,15 @@ WHERE reviewID = @reviewID;
 -- CRUD queries for the Books table:
 
 -- CREATE a new book
+SELECT Authors.authorID INTO @authorID FROM Authors WHERE Authors.name = @name;
 INSERT INTO Books (title, authorID, year, isbn)
-VALUES (@title, @authorID, @year, @isbn);
+VALUES (@title, @authorID, @year, @isbn
+SELECT LAST_INSERT_ID() INTO p_bookID;
+INSERT INTO Books_has_Genres (bookID, genreID)
+VALUES (
+	@bookID, 
+	@genreID
+);
 
 -- READ out books in the database
 WITH BGList (bookID, genres) AS (
@@ -125,17 +105,18 @@ ORDER BY "Title" ASC, "Book ID" ASC;
 
 -- UPDATE an existing book
 UPDATE Books 
-SET title = @title,
-  authorID = @authorID,
-  year = @year,
-  isbn = @isbn
+SET 
+	authorID = @authorID,
+	year = @year,
+	isbn = @isbn
 WHERE bookID = @bookID;
--- The query below needs to be replaced with something more precise 
-/*
-UPDATE Books_has_Genres 
-SET genreID = @genreID
-WHERE bookID = @bookID;
-*/
+DELETE FROM Books_has_Genres WHERE bookID = @bookID;
+SELECT genreID INTO @genreID FROM Genres WHERE description = @description;
+INSERT INTO Books_has_Genres (bookID, genreID) 
+VALUES (
+	@bookID, 
+	@genreID
+);
 
 -- DELETE a book from the database
 DELETE FROM Books 
@@ -179,10 +160,6 @@ WHERE authorID = @authorID;
 
 -- CRUD queries for the Genres table:
 
--- CREATE a new genre
-INSERT INTO Genres (description)
-VALUES (@desc);
-
 -- READ out genres in the database
 WITH BookCounts (genreID, numBooks) AS (
 	SELECT g.genreID, COUNT(*)
@@ -198,11 +175,6 @@ bc.numBooks AS "Number of Books"
 FROM Genres AS g
 JOIN BookCounts AS bc ON g.genreID = bc.genreID
 ORDER BY "Description" ASC;
-
--- UPDATE an existing genre
-UPDATE Genres 
-SET description = @desc
-WHERE genreID = @genreID;
 
 -- DELETE a genre from the database
 DELETE FROM Genre 
