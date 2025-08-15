@@ -1,0 +1,40 @@
+// Disclaimer: The CS340 starter code for implementing CUD operations was used as 
+// a guide for the following code
+
+const DeleteBookForm = ({ rowObject, backendURL, refreshBooks }) => {
+
+    const handleDelete = async function (event) {
+        event.preventDefault();
+
+        console.log(rowObject);
+
+        try {
+            const response = await fetch(backendURL + '/delete-book', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ "bookID": rowObject["Book ID"] }),
+            });
+
+            const { message } = await response.json();
+            console.log(message);
+            refreshBooks(); // Reload book data after deletion
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    return (
+        <td>
+            <form onSubmit={handleDelete}>
+                <button type='submit'>
+                    Delete
+                </button>
+            </form>
+        </td>
+
+    );
+};
+
+export default DeleteBookForm;

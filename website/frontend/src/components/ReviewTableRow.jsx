@@ -1,0 +1,18 @@
+// Disclaimer: The appropriate CS340 starter code for Web Application Technology was used as 
+// a guide for the following code
+
+import DeleteReviewForm from './DeleteReviewForm';
+
+const ReviewTableRow = ({ rowObject, backendURL, refreshReviews }) => {
+    return (
+        <tr>
+            {Object.values(rowObject).map((value, index) => (
+                <td key={index}>{value}</td>
+            ))}
+            
+            <DeleteReviewForm rowObject={rowObject} backendURL={backendURL} refreshReviews={refreshReviews} />
+        </tr>
+    );
+};
+
+export default ReviewTableRow;
