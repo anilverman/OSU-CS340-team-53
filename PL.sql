@@ -183,6 +183,7 @@ BEGIN
 END //
 
 -- Procedure for updating the information of a book in the database
+-- Disclaimer: Gemini was used to ensure that the procedure's syntax was correct for MariaDB
 CREATE PROCEDURE beaverton_library_update_book(
     IN p_bookID INT,
     p_newAuthorID INT,
