@@ -9,10 +9,10 @@ VALUES (@name, @email, @phone);
 
 -- READ out members in the database
 SELECT
-  m.memberID AS "Member ID",
-  m.name AS "Name",
-  m.email AS "Email",
-  m.phone AS "Phone Number" 
+	m.memberID AS "Member ID",
+	m.name AS "Name",
+	m.email AS "Email",
+	m.phone AS "Phone Number" 
 FROM Members AS m
 ORDER BY "Name" ASC;
 
@@ -72,10 +72,10 @@ VALUES (@rating, @memberID, @bookID);
 
 -- READ out reviews in the database
 SELECT
-  r.reviewID AS "Review ID",
-  b.title AS "Book Title",
-  m.name AS "Reviewer",
-  r.rating AS "Rating"
+	r.reviewID AS "Review ID",
+	b.title AS "Book Title",
+	m.name AS "Reviewer",
+	r.rating AS "Rating"
 FROM Reviews AS r
 JOIN Members AS m ON m.memberID = r.memberID
 JOIN Books AS b ON b.bookID = r.bookID
@@ -102,25 +102,25 @@ VALUES (@title, @authorID, @year, @isbn);
 -- READ out books in the database
 WITH BGList (bookID, genres) AS (
 	SELECT bg.bookID, GROUP_CONCAT(g.description SEPARATOR ", ")
-    FROM Books_has_Genres AS bg
-    JOIN Genres AS g ON bg.genreID = g.genreID
-    GROUP BY bg.bookID
+	FROM Books_has_Genres AS bg
+	JOIN Genres AS g ON bg.genreID = g.genreID
+	GROUP BY bg.bookID
 )
 SELECT
-  b.bookID AS "Book ID",
-  b.title AS "Title",
-  a.name AS "Author",
-  bgl.genres AS "Genre(s)",
-  b.year AS "Publishing Year",
-  b.isbn AS "ISBN",
-  CASE
-    WHEN c.isReturned = 1 THEN "Yes"
-    ELSE "No"
-  END AS "Checked Out?"
+b.bookID AS "Book ID",
+b.title AS "Title",
+a.name AS "Author",
+bgl.genres AS "Genre(s)",
+b.year AS "Publishing Year",
+b.isbn AS "ISBN",
+CASE
+	WHEN c.isReturned = 1 THEN "Yes"
+	ELSE "No"
+END AS "Checked Out?"
 FROM Books AS b
 JOIN BGList AS bgl ON b.bookID = bgl.bookID
 JOIN Authors AS a ON b.authorID = a.authorID
-JOIN Checkouts AS c ON b.bookID = c.bookID
+LEFT JOIN Checkouts AS c ON b.bookID = c.bookID
 ORDER BY "Title" ASC, "Book ID" ASC;
 
 -- UPDATE an existing book
@@ -150,18 +150,21 @@ VALUES (@name);
 
 -- READ out authors in the database
 WITH BookCounts (authorID, numBooks) AS (
-  SELECT a.authorID, COUNT(*)
-  FROM Books AS b 
-  JOIN Authors as a
-  WHERE a.authorID = b.authorID
-  GROUP BY a.authorID
+    SELECT a.authorID, COUNT(*)
+    FROM Books AS b 
+    JOIN Authors as a
+    WHERE a.authorID = b.authorID
+    GROUP BY a.authorID
 )
 SELECT 
-  a.authorID AS "Author ID", 
-  a.name AS "Name",
-  bc.numBooks AS "Number of Books"
+a.authorID AS "Author ID", 
+a.name AS "Name",
+CASE
+	WHEN bc.numBooks IS NULL THEN 0
+	ELSE bc.numBooks
+END AS "Number of Books"
 FROM Authors AS a
-JOIN BookCounts as bc ON a.authorID = bc.authorID
+LEFT JOIN BookCounts as bc ON a.authorID = bc.authorID
 ORDER BY "Name" ASC;
 
 -- UPDATE an existing author
@@ -182,16 +185,16 @@ VALUES (@desc);
 
 -- READ out genres in the database
 WITH BookCounts (genreID, numBooks) AS (
-  SELECT g.genreID, COUNT(*)
-  FROM Books_has_Genres AS bg 
-  JOIN Genres as g
-  WHERE g.genreID = bg.genreID
-  GROUP BY g.genreID
+	SELECT g.genreID, COUNT(*)
+	FROM Books_has_Genres AS bg 
+	JOIN Genres as g
+	WHERE g.genreID = bg.genreID
+	GROUP BY g.genreID
 )
 SELECT 
-  g.genreID AS "Genre ID", 
-  g.description AS "Description",
-  bc.numBooks AS "Number of Books"
+g.genreID AS "Genre ID", 
+g.description AS "Description",
+bc.numBooks AS "Number of Books"
 FROM Genres AS g
 JOIN BookCounts AS bc ON g.genreID = bc.genreID
 ORDER BY "Description" ASC;
