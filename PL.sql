@@ -5,7 +5,12 @@ DROP PROCEDURE IF EXISTS beaverton_library_add_book;
 DROP PROCEDURE IF EXISTS beaverton_library_update_book;
 DROP PROCEDURE IF EXISTS beaverton_library_delete_book;
 DROP PROCEDURE IF EXISTS beaverton_library_add_author;
+DROP PROCEDURE IF EXISTS beaverton_library_update_author;
 DROP PROCEDURE IF EXISTS beaverton_library_delete_author;
+DROP PROCEDURE IF EXISTS beaverton_library_delete_genre;
+DROP PROCEDURE IF EXISTS beaverton_library_delete_member;
+DROP PROCEDURE IF EXISTS beaverton_library_delete_checkout;
+DROP PROCEDURE IF EXISTS beaverton_library_delete_review;
 
 DELIMITER //
 
@@ -78,7 +83,7 @@ BEGIN
         KEY (memberID),
         KEY (bookID),
         FOREIGN KEY (memberID) REFERENCES Members(memberID)
-            ON DELETE NO ACTION ON UPDATE NO ACTION,
+            ON DELETE CASCADE ON UPDATE CASCADE,
         FOREIGN KEY (bookID) REFERENCES Books(bookID)
             ON DELETE CASCADE ON UPDATE CASCADE
     );
@@ -92,7 +97,7 @@ BEGIN
         KEY (memberID),
         KEY (bookID),
         FOREIGN KEY (memberID) REFERENCES Members(memberID)
-            ON DELETE NO ACTION ON UPDATE NO ACTION,
+            ON DELETE CASCADE ON UPDATE CASCADE,
         FOREIGN KEY (bookID) REFERENCES Books(bookID)
             ON DELETE CASCADE ON UPDATE CASCADE
     );
@@ -178,30 +183,81 @@ BEGIN
 END //
 
 -- Procedure for updating the information of a book in the database
-CREATE PROCEDURE beaverton_library_update_book(IN p_bookID INT, p_newAuthorID INT, p_newYear INT, p_newIsbn VARCHAR(17), p_newGenre INT)
+CREATE PROCEDURE beaverton_library_update_book(
+    IN p_bookID INT,
+    p_newAuthorID INT,
+    p_newYear INT,
+    p_newIsbn VARCHAR(17),
+    p_newGenres VARCHAR(65535)
+)
 BEGIN
+    -- 1. Declare all variables, cursors, and handlers first (MariaDB gave me a MASSIVE headache until I got this down)
+    -- Variables
+    DECLARE currentGenre VARCHAR(145);
+    DECLARE p_genreID INT;
+    DECLARE v_position INT DEFAULT 1;
+    DECLARE v_value VARCHAR(145);
+    DECLARE done INT DEFAULT FALSE;
+    
+    -- Cursor (declared after all variables)
+    DECLARE genreIterator CURSOR FOR SELECT value FROM temp_values;
+
+    -- Handlers (declared last)
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        -- Rollback the transaction in case of any error
         ROLLBACK;
-        SELECT CONCAT("Error: Could not update the information of book #", p_bookID," in the database.") AS Result;
+        -- Use IF EXISTS to avoid errors if the table was never created
+        DROP TEMPORARY TABLE IF EXISTS temp_values;
+        SELECT CONCAT("Error: Could not update the information of book #", p_bookID, " in the database.") AS Result;
     END;
+    
+    -- 2. Execute other statements after all declarations are complete
+    CREATE TEMPORARY TABLE temp_values (
+        value VARCHAR(145)
+    );
 
+    WHILE v_position > 0 DO
+        SET v_position = LOCATE('|', p_newGenres);
+        IF v_position > 0 THEN
+            SET v_value = SUBSTRING(p_newGenres, 1, v_position - 1);
+            SET p_newGenres = SUBSTRING(p_newGenres, v_position + 1);
+        ELSE
+            SET v_value = p_newGenres;
+        END IF;
+        INSERT INTO temp_values (value) VALUES (v_value);
+    END WHILE;
+
+    -- 3. Proceed with the rest of the procedure
     START TRANSACTION;
 
-    UPDATE Books SET 
-        Books.authorID = p_newAuthorID,
-        Books.year = p_newYear,
-        Books.isbn = p_newIsbn
-    WHERE Books.bookID = p_bookID;
-    DELETE FROM Books_has_Genres WHERE Books.bookID = Books_has_Genres.bookID;
-    INSERT INTO Books_has_Genres (bookID, genreID)
-    VALUES (
-        p_bookID,
-        p_newGenre
-    );
+    UPDATE Books
+    SET
+        authorID = p_newAuthorID,
+        year = p_newYear,
+        isbn = p_newIsbn
+    WHERE bookID = p_bookID;
+
+    DELETE FROM Books_has_Genres WHERE bookID = p_bookID;
+
+    OPEN genreIterator;
+    read_loop: LOOP
+        FETCH genreIterator INTO currentGenre;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        SELECT genreID INTO p_genreID FROM Genres WHERE description = currentGenre;
+        
+        IF p_genreID IS NOT NULL THEN
+            INSERT INTO Books_has_Genres (bookID, genreID) VALUES (p_bookID, p_genreID);
+        END IF;
+    END LOOP;
+    CLOSE genreIterator;
+
     COMMIT;
     SELECT CONCAT("Book #", p_bookID, " successfully updated.") AS Result;
+    DROP TEMPORARY TABLE IF EXISTS temp_values;
 END //
 
 -- Procedure for deleting a book from the database
@@ -253,6 +309,26 @@ BEGIN
     END IF;
 END //
 
+-- Procedure for updating the information of an author in the database
+CREATE PROCEDURE beaverton_library_update_author(IN p_authorID INT, p_newName VARCHAR(145))
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Rollback the transaction in case of any error
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not update the information of author #", p_authorID," in the database.") AS Result;
+    END;
+
+    START TRANSACTION;
+
+    UPDATE Authors
+    SET
+        name = p_newName
+    WHERE authorID = p_authorID;
+    COMMIT;
+    SELECT CONCAT("Author #", p_authorID, " successfully updated.") AS Result;
+END //
+
 -- Procedure for deleting an author from the database
 CREATE PROCEDURE beaverton_library_delete_author(IN p_authorID INT)
 BEGIN
@@ -275,6 +351,106 @@ BEGIN
         -- Rollback the transaction if author does not exist
         ROLLBACK;
         SELECT CONCAT("Error: Could not delete author #", p_authorID," from the database.") AS Result;
+    END IF;
+END //
+
+-- Procedure for deleting a genre from the database
+CREATE PROCEDURE beaverton_library_delete_genre(IN p_genreID INT)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Rollback the transaction in case of any error
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not delete genre #", p_genreID," from the database.") AS Result;
+    END;
+
+    START TRANSACTION;
+
+    -- Checks if the genre to be deleted is actually in the database
+    IF EXISTS (SELECT 1 FROM Genres WHERE Genres.genreID = p_genreID) THEN
+        -- Delete the genre from the Genres table
+        DELETE FROM Genres WHERE Genres.genreID = p_genreID;
+        COMMIT;
+        SELECT CONCAT("Genre #", p_genreID, " successfully deleted.") AS Result;
+    ELSE
+        -- Rollback the transaction if genre does not exist
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not delete genre #", p_genreID," from the database.") AS Result;
+    END IF;
+END //
+
+-- Procedure for deleting a member from the database
+CREATE PROCEDURE beaverton_library_delete_member(IN p_memberID INT)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Rollback the transaction in case of any error
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not delete member #", p_memberID," from the database.") AS Result;
+    END;
+
+    START TRANSACTION;
+
+    -- Checks if the member to be deleted is actually in the database
+    IF EXISTS (SELECT 1 FROM Members WHERE Members.memberID = p_memberID) THEN
+        -- Delete the member from the Members table
+        DELETE FROM Members WHERE Members.memberID = p_memberID;
+        COMMIT;
+        SELECT CONCAT("Member #", p_memberID, " successfully deleted.") AS Result;
+    ELSE
+        -- Rollback the transaction if member does not exist
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not delete member #", p_memberID," from the database.") AS Result;
+    END IF;
+END //
+
+-- Procedure for deleting a checkout from the database
+CREATE PROCEDURE beaverton_library_delete_checkout(IN p_checkoutID INT)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Rollback the transaction in case of any error
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not delete checkout #", p_checkoutID," from the database.") AS Result;
+    END;
+
+    START TRANSACTION;
+
+    -- Checks if the checkout to be deleted is actually in the database
+    IF EXISTS (SELECT 1 FROM Checkouts WHERE Checkouts.checkoutID = p_checkoutID) THEN
+        -- Delete the checkout from the Checkouts table
+        DELETE FROM Checkouts WHERE Checkouts.checkoutID = p_checkoutID;
+        COMMIT;
+        SELECT CONCAT("Checkout #", p_checkoutID, " successfully deleted.") AS Result;
+    ELSE
+        -- Rollback the transaction if checkout does not exist
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not delete checkout #", p_checkoutID," from the database.") AS Result;
+    END IF;
+END //
+
+-- Procedure for deleting a review from the database
+CREATE PROCEDURE beaverton_library_delete_review(IN p_reviewID INT)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Rollback the transaction in case of any error
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not delete review #", p_reviewID," from the database.") AS Result;
+    END;
+
+    START TRANSACTION;
+
+    -- Checks if the review to be deleted is actually in the database
+    IF EXISTS (SELECT 1 FROM Reviews WHERE Reviews.reviewID = p_reviewID) THEN
+        -- Delete the review from the Reviews table
+        DELETE FROM Reviews WHERE Reviews.reviewID = p_reviewID;
+        COMMIT;
+        SELECT CONCAT("Review #", p_reviewID, " successfully deleted.") AS Result;
+    ELSE
+        -- Rollback the transaction if review does not exist
+        ROLLBACK;
+        SELECT CONCAT("Error: Could not delete review #", p_reviewID," from the database.") AS Result;
     END IF;
 END //
 
